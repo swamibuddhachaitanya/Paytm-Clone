@@ -32,12 +32,24 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+const accountSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,//Reference to the User Model.
+    ref: 'User',
+    required: true
+  },
+  balance: {
+    type: Number,
+    required: true
+  }
+
+});
 
 
 
 async function connectToDb(req,res) {
   try {
-  
+    // to initialise the db and also connect to it
     await mongoose.connect('mongodb://localhost:27017/paytm');
     console.log("Db Connected")
   } catch (error) {
@@ -77,11 +89,13 @@ userSchema.methods.validatePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+//Models
 const User = mongoose.model("User", userSchema);
-
+const Account = mongoose.model('Account', accountSchema);
 
 module.exports= {
   User,
+  Account,
   connectToDb,
   uniqueUserValidation
 };
