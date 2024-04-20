@@ -13,8 +13,6 @@ const { JWT_SECRET } = require("../config");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const router = Router();
 
-
-
 router.post(
   "/signup",
   ValidateUser,
@@ -27,29 +25,33 @@ router.post(
     // 	message: "User created successfully",
     // 	token: "jwt"
     // }
-
+    // console.log("Im reaching here"+ username + "hii")
     try {
-      const { username, firstName, lastName, password } = req.body;
+      // const { username, firstName, lastName, password } = req.body;
+      const username = req.body.username;
+      const password = req.body.password;
+      const firstName = req.body.firstName;
+      const lastName = req.body.lastName;
 
       const newUser = new User({
         username,
         firstName,
         lastName,
       });
-
+      console.log("Im reaching here" + req.body + "hii");
       // Add another functionality to hash the password using bcrypt
       var hashedPassword = await newUser.createHash(password);
       newUser.password = hashedPassword;
 
       // Save newUser object to database
       const savedUser = await newUser.save();
-      
+
       // create a random value between 1 and 10000
-      const randomBalance = Math.floor(Math.random()* 10000) + 1;
-      
+      const randomBalance = Math.floor(Math.random() * 10000) + 1;
+
       const newAccount = new Account({
         userId: savedUser._id,
-        balance: randomBalance
+        balance: randomBalance,
       });
 
       await newAccount.save();
@@ -62,10 +64,9 @@ router.post(
       const token = jwt.sign(payload, JWT_SECRET);
 
       res.status(200).json({ msg: "User created successfully", token: token });
-
     } catch (error) {
       res
-        .send(500)
+        .status(500)
         .json({ msg: "getting error while creating new user in the signup." });
     }
   }
@@ -134,19 +135,36 @@ router.put("/", authMiddleware, async function (req, res) {
   }
 });
 
-router.get("/bulk", async function (req, res) {
+router.get("/bulk",authMiddleware,async function (req, res) {
   // Route to get users from the backend, filterable via firstName/lastName
   // This is needed so users can search for their friends and send them money
   try {
     const name = req.query.filter; // name to find in the db;
+    
+    const userId = req.userId;
+    
+    let queryCondition = {}; // Initialize an empty object for the query condition
+    
 
-    const usersFound = await User.find(
-      { $or: [{ firstName: name }, { lastName: name }] }, //condition for query
-      '_id username firstName lastName ' // fields to include
-    );
+    // Check if the name is empty, if so, return all users
+    if (name === "") {
+      // No specific name provided, return all users
+      usersFound = await User.find(
+        { _id: { $ne: userId } }, 
+        "_id username firstName lastName"
+      );
+      // console.log("found the user to exclude");
+    } else {
+      // Name is provided, search for users matching either firstName or lastName
+      queryCondition = { $or: [{ firstName: name }, { lastName: name }] };
+      usersFound = await User.find(
+        queryCondition,
+        "_id username firstName lastName"
+      );
+    }
 
     if (usersFound) {
-      return res.status(200).json(usersFound);
+      return res.status(200).json({ user: usersFound });
     } else {
       return res.status(404).json({ message: "Users not found" });
     }

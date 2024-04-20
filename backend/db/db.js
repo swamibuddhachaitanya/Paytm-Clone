@@ -66,6 +66,7 @@ async function uniqueUserValidation(req,res,next) {
     if (userToFind) {
       return res.status(400).json({msg: "Email already taken / user already exists"});
     }
+    console.log("user is unique"+ req.body.username)
     next();  
   } catch (error) {
     res.send(500).json({msg: "getting error while unique user validation."})

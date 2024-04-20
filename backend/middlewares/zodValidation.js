@@ -29,6 +29,7 @@ function ValidateUser(req, res, next) {
     };
     const ValidatedUser = user.parse(UserToValidate);
     req.ValidatedUser = ValidatedUser;
+    console.log("user is validated"+ req.body.username)
     next();
   } catch (error) {
    return res.status(400).json({ error: "error validating the user during signup" });

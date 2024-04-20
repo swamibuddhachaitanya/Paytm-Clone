@@ -12,15 +12,17 @@ router.get("/balance", authMiddleware, async function (req, res) {
   // if the token is right, then the authMiddleware stores the userId in the req.userId
   //next step is to return the balance of the account of the user
   try {
+    console.log("hii youre at the balance section the id is "+ req.userId);
     const userId = req.userId;
     //now find the account of the user using this userId
     const accountBalanceFound = await Account.findOne(
       { userId: userId }, //query condition
       { _id: 0, balance: 1 } //field to include in the output
     );
-
+    
     if (accountBalanceFound) {
-      return res.status(200).json(accountBalanceFound);
+      console.log("its returning the balance:"+ accountBalanceFound.balance)
+      return res.status(200).json({balance:accountBalanceFound.balance});
     } else {
       return res.status(404).json({ message: "Couldnt find the account" });
     }
